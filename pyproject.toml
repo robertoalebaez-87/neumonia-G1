@@ -33,9 +33,9 @@ ml = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/dalquinones/UAO-Neumonia"
-Repository = "https://github.com/dalquinones/UAO-Neumonia"
-Issues = "https://github.com/dalquinones/UAO-Neumonia/issues"
+Homepage = "https://github.com/robertoalebaez-87/neumonia-G1"
+Repository = "https://github.com/robertoalebaez-87/neumonia-G1"
+Issues = "https://github.com/robertoalebaez-87/neumonia-G1/issues"
 
 [project.scripts]
 neumonia = "neumonia.app:main"

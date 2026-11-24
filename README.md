@@ -65,8 +65,8 @@ mapa de calor las regiones relevantes de la imagen de entrada.
 ## Primeros pasos
 
 ```bash
-git clone https://github.com/dalquinones/UAO-Neumonia.git
-cd UAO-Neumonia
+git clone https://github.com/robertoalebaez-87/neumonia-G1.git
+cd neumonia-G1
 
 make install          # uv sync --extra ml
 make run              # abre http://127.0.0.1:8000
