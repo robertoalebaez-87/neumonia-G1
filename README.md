@@ -1,105 +1,210 @@
-## Hola! Bienvenido a la herramienta para la detección rápida de neumonía
+# Detección rápida de neumonía con Grad-CAM
 
-Deep Learning aplicado en el procesamiento de imágenes radiográficas de tórax en formato DICOM con el fin de clasificarlas en 3 categorías diferentes:
+[![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/managed%20by-uv-261230.svg)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/badge/lint-Ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Tests](https://img.shields.io/badge/tests-210%2B-success.svg)](tests/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-1. Neumonía Bacteriana
+Herramienta de escritorio para clasificar radiografías de tórax en **neumonía
+bacteriana**, **viral** o **sin neumonía**, explicando la decisión con un mapa de
+calor **Grad-CAM**.
 
-2. Neumonía Viral
+## Tabla de contenidos
 
-3. Sin Neumonía
+- [Descripción](#descripción)
+- [Características](#características)
+- [Stack](#stack)
+- [Requisitos](#requisitos)
+- [Primeros pasos](#primeros-pasos)
+- [Modo demo](#modo-demo-sin-modelo)
+- [Uso de la interfaz](#uso-de-la-interfaz)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Calidad y pruebas](#calidad-y-pruebas)
+- [Arquitectura del modelo](#arquitectura-del-modelo)
+- [Acerca de Grad-CAM](#acerca-de-grad-cam)
+- [Contribución](#contribución)
+- [Licencia](#licencia)
 
-Aplicación de una técnica de explicación llamada Grad-CAM para resaltar con un mapa de calor las regiones relevantes de la imagen de entrada.
+## Descripción
 
----
+Deep Learning aplicado al procesamiento de imágenes radiográficas de tórax en
+formato DICOM con el fin de clasificarlas en tres categorías:
 
-## Uso de la herramienta:
+1. Neumonía bacteriana
+2. Neumonía viral
+3. Sin neumonía
 
-A continuación le explicaremos cómo empezar a utilizarla.
+Además aplica una técnica de explicación llamada **Grad-CAM** para resaltar con un
+mapa de calor las regiones relevantes de la imagen de entrada.
 
-Requerimientos necesarios para el funcionamiento:
+## Características
 
-- Instale Anaconda para Windows siguiendo las siguientes instrucciones:
-  https://docs.anaconda.com/anaconda/install/windows/
+- Lectura de imágenes **DICOM**, **JPG** y **PNG**.
+- Preprocesamiento: `resize` 512×512, escala de grises, CLAHE y normalización.
+- Predicción con una CNN preentrenada.
+- Visualización **Grad-CAM** superpuesta.
+- Reporte en **PDF** con los datos de la lectura y ambas imágenes.
+- Lógica separada de la UI y **210+ pruebas unitarias** con pytest.
+- Regla de dependencia: `ui.py` solo importa `integrator`, nunca TensorFlow ni `load_model`.
+- **Modo demo** para probar la interfaz sin modelo ni dependencias `ml`.
 
-- Abra Anaconda Prompt y ejecute las siguientes instrucciones:
+## Stack
 
-  conda create -n tf tensorflow
+- Python 3.13 · `uv` · `hatchling` · Ruff · pytest · ty · pre-commit
+- NumPy · Pillow · FastAPI · Uvicorn · ReportLab
+- Extra `ml`: TensorFlow, OpenCV, pydicom
+- Interfaz: HTML/CSS/JS embebido servido por FastAPI
 
-  conda activate tf
+## Requisitos
 
-  cd UAO-Neumonia
+- [uv](https://docs.astral.sh/uv/) instalado.
+- Para inferencia real: el modelo `WilhemNet86.h5` (no incluido en el repositorio)
+  en la raíz del proyecto. El modo demo funciona sin él.
 
-  pip install -r requirements.txt
+## Primeros pasos
 
-  python detector_neumonia.py
+```bash
+git clone https://github.com/dalquinones/UAO-Neumonia.git
+cd UAO-Neumonia
 
-Uso de la Interfaz Gráfica:
+make install          # uv sync --extra ml
+make run              # abre http://127.0.0.1:8000
+```
 
-- Ingrese la cédula del paciente en la caja de texto
-- Presione el botón 'Cargar Imagen', seleccione la imagen del explorador de archivos del computador (Imagenes de prueba en https://drive.google.com/drive/folders/1WOuL0wdVC6aojy8IfssHcqZ4Up14dy0g?usp=drive_link)
-- Presione el botón 'Predecir' y espere unos segundos hasta que observe los resultados
-- Presione el botón 'Guardar' para almacenar la información del paciente en un archivo excel con extensión .csv
-- Presione el botón 'PDF' para descargar un archivo PDF con la información desplegada en la interfaz
-- Presión el botón 'Borrar' si desea cargar una nueva imagen
+> También puedes ejecutar directamente: `uv run python detector_neumonia.py`.
+> Si instalaste solo el entorno base, añade DICOM/modelo con `uv sync --extra ml`.
+> Tras editar `src/*.py`, refresca las copias con
+> `uv sync --extra ml --reinstall-package neumonia`.
 
----
+### Modo demo (sin modelo)
 
-## Arquitectura de archivos propuesta.
+Si `WilhemNet86.h5` no está en la raíz, la casilla **Modo demostración** se activa
+automáticamente. Carga una imagen JPG/PNG/DICOM y pulsa **Analizar imagen**: se
+generan una etiqueta, una probabilidad y un mapa de calor **ilustrativos** usando
+NumPy y Pillow, sin TensorFlow ni OpenCV para la explicación.
 
-## detector_neumonia.py
+Puedes marcar o desmarcar la casilla en cualquier momento. Si la desmarcas sin el
+modelo, la aplicación avisa en lugar de fallar. El modo demo queda señalado en el
+resultado junto con el mapa de calor; **no es válido para diagnóstico**.
 
-Contiene el diseño de la interfaz gráfica utilizando Tkinter.
+### Calidad y pruebas
 
-Los botones llaman métodos contenidos en otros scripts.
+```bash
+make check            # lint + formato + tipos + pruebas
+make test             # solo pruebas
+make test-cov         # pruebas con cobertura
+make help             # lista de objetivos disponibles
+```
 
-## integrator.py
+## Uso de la interfaz
 
-Es un módulo que integra los demás scripts y retorna solamente lo necesario para ser visualizado en la interfaz gráfica.
-Retorna la clase, la probabilidad y una imagen el mapa de calor generado por Grad-CAM.
+1. Ingresa el identificador del paciente en la caja de texto.
+2. Marca o desmarca **Modo demostración**: se activa solo si no hay modelo.
+3. Selecciona o arrastra un estudio (DICOM/JPG/PNG).
+4. Presiona **Analizar imagen**.
+5. Compara el estudio cargado a la izquierda con el mapa de calor a la derecha.
+6. Presiona **Informe PDF** para descargar datos y ambas imágenes.
 
-## read_img.py
+Imágenes de prueba: <https://drive.google.com/drive/folders/1WOuL0wdVC6aojy8IfssHcqZ4Up14dy0g>
 
-Script que lee la imagen en formato DICOM para visualizarla en la interfaz gráfica. Además, la convierte a arreglo para su preprocesamiento.
+## Estructura del proyecto
 
-## preprocess_img.py
+```text
+.
+├── src/                   # módulos públicos exigidos por la guía
+│   ├── load_model.py      # cargar el .h5 una sola vez
+│   ├── read_img.py        # leer DICOM y JPEG
+│   ├── preprocess_img.py  # resize 512×512, gris, CLAHE, normalizar
+│   ├── grad_cam.py        # generar el mapa de calor
+│   ├── integrator.py      # preprocesar → predecir → explicar; fachada para ui
+│   ├── ui.py              # UI web FastAPI + HTML embebido (solo importa integrator)
+│   └── neumonia/          # implementación canónica (src-layout)
+│       ├── constants.py   # constantes del dominio
+│       ├── labels.py      # índices → etiquetas
+│       ├── images.py      # lectura y preprocesamiento
+│       ├── gradcam.py     # matemática de Grad-CAM
+│       ├── predict.py     # interpretación y orquestación
+│       ├── applogic.py    # lógica de UI independiente del framework
+│       ├── demo.py        # modo demo sin modelo ni dependencias ml
+│       ├── model.py       # carga del modelo con caché (TF perezoso)
+│       ├── tf_backend.py  # Grad-CAM con TensorFlow
+│       └── app.py         # compatibilidad: reexporta ui.App
+├── tests/                 # pruebas unitarias
+├── tools/                 # utilidades del Makefile
+├── docs/                  # documentación
+├── detector_neumonia.py   # lanzador histórico
+├── main.py                # alias de arranque
+├── Makefile
+├── pyproject.toml
+└── CONSTITUTION.md        # fuente única de verdad
+```
 
-Script que recibe el arreglo proveniento de read_img.py, realiza las siguientes modificaciones:
+Los seis módulos directos en `src/` son la API pública exigida por la guía.
+`ui.py` contiene la interfaz y solo depende de `integrator`; este concentra las
+dependencias de inferencia y reexporta la implementación de `neumonia`.
 
-- resize a 512x512
-- conversión a escala de grises
-- ecualización del histograma con CLAHE
-- normalización de la imagen entre 0 y 1
-- conversión del arreglo de imagen a formato de batch (tensor)
+```mermaid
+flowchart LR
+    UI["ui.py"] --> INT["integrator.py"]
 
-## load_model.py
+    subgraph API["Módulos de la guía"]
+        LM["load_model.py"]
+        RI["read_img.py"]
+        PP["preprocess_img.py"]
+        GC["grad_cam.py"]
+        INT
+    end
 
-Script que lee el archivo binario del modelo de red neuronal convolucional previamente entrenado llamado 'WilhemNet86.h5'.
+    INT --> DEMO["neumonia/demo.py"]
+    INT --> PREDICT["neumonia/predict.py"]
+    INT --> IMAGES["neumonia/images.py"]
+    INT --> LM
+    INT --> PP
+    INT --> GC
 
-## grad_cam.py
+    LM --> MODEL["neumonia/model.py"]
+    RI --> IMAGES
+    PP --> IMAGES
+    GC --> GRADCAM["neumonia/gradcam.py"]
+    GC --> TF["neumonia/tf_backend.py"]
+```
 
-Script que recibe la imagen y la procesa, carga el modelo, obtiene la predicción y la capa convolucional de interés para obtener las características relevantes de la imagen.
+## Arquitectura del modelo
 
----
+La red neuronal convolucional (CNN) está basada en el modelo de F. Pasa,
+V. Golkov, F. Pfeifer, D. Cremers & D. Pfeifer en su artículo *Efficient Deep
+Network Architectures for Fast Chest X-Ray Tuberculosis Screening and
+Visualization*.
 
-## Acerca del Modelo
+Está compuesta por 5 bloques convolucionales, cada uno con 3 convoluciones: dos
+secuenciales y una conexión *skip* que evita el desvanecimiento del gradiente a
+medida que se avanza en profundidad. Con 16, 32, 48, 64 y 80 filtros de 3×3 para
+cada bloque respectivamente.
 
-La red neuronal convolucional implementada (CNN) es basada en el modelo implementado por F. Pasa, V.Golkov, F. Pfeifer, D. Cremers & D. Pfeifer
-en su artículo Efcient Deep Network Architectures for Fast Chest X-Ray Tuberculosis Screening and Visualization.
-
-Está compuesta por 5 bloques convolucionales, cada uno contiene 3 convoluciones; dos secuenciales y una conexión 'skip' que evita el desvanecimiento del gradiente a medida que se avanza en profundidad.
-Con 16, 32, 48, 64 y 80 filtros de 3x3 para cada bloque respectivamente.
-
-Después de cada bloque convolucional se encuentra una capa de max pooling y después de la última una capa de Average Pooling seguida por tres capas fully-connected (Dense) de 1024, 1024 y 3 neuronas respectivamente.
-
-Para regularizar el modelo utilizamos 3 capas de Dropout al 20%; dos en los bloques 4 y 5 conv y otra después de la 1ra capa Dense.
+Después de cada bloque convolucional hay una capa de max pooling y, después de la
+última, una capa de average pooling seguida por tres capas fully-connected
+(Dense) de 1024, 1024 y 3 neuronas. Para regularizar se usan 3 capas de Dropout al
+20 %: dos en los bloques 4 y 5 y otra después de la primera capa Dense.
 
 ## Acerca de Grad-CAM
 
-Es una técnica utilizada para resaltar las regiones de una imagen que son importantes para la clasificación. Un mapeo de activaciones de clase para una categoría en particular indica las regiones de imagen relevantes utilizadas por la CNN para identificar esa categoría.
+Grad-CAM resalta las regiones de una imagen que son importantes para la
+clasificación. Calcula el gradiente de la salida correspondiente a la clase con
+respecto a las neuronas de una capa convolucional y combina linealmente los mapas
+de activación con esos pesos, produciendo un mapa de calor con mayor intensidad en
+las regiones relevantes para la decisión de la red.
 
-Grad-CAM realiza el cálculo del gradiente de la salida correspondiente a la clase a visualizar con respecto a las neuronas de una cierta capa de la CNN. Esto permite tener información de la importancia de cada neurona en el proceso de decisión de esa clase en particular. Una vez obtenidos estos pesos, se realiza una combinación lineal entre el mapa de activaciones de la capa y los pesos, de esta manera, se captura la importancia del mapa de activaciones para la clase en particular y se ve reflejado en la imagen de entrada como un mapa de calor con intensidades más altas en aquellas regiones relevantes para la red con las que clasificó la imagen en cierta categoría.
+## Contribución
 
-## Proyecto original realizado por:
+Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md). Usa **Conventional Commits** y
+asegúrate de que `make check` pase antes de abrir un Pull Request.
 
-Isabella Torres Revelo - https://github.com/isa-tr
-Nicolas Diaz Salazar - https://github.com/nicolasdiazsalazar
+## Licencia
+
+Distribuido bajo licencia **MIT**. Ver [`LICENSE`](LICENSE).
+
+## Proyecto original
+
+- Isabella Torres Revelo — <https://github.com/isa-tr>
+- Nicolas Diaz Salazar — <https://github.com/nicolasdiazsalazar>

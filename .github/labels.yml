@@ -1,0 +1,21 @@
+- name: bug
+  color: d73a4a
+  description: Algo no funciona como se espera
+- name: enhancement
+  color: a2eeef
+  description: Nueva funcionalidad o mejora
+- name: documentation
+  color: 0075ca
+  description: Documentación
+- name: tests
+  color: fbca04
+  description: Pruebas unitarias
+- name: spike
+  color: c5def5
+  description: Investigación o exploración
+- name: dependencies
+  color: 0366d6
+  description: Actualización de dependencias
+- name: good first issue
+  color: 7057ff
+  description: Adecuado para principiantes

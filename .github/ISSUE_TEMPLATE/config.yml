@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentación
+    url: https://github.com/dalquinones/UAO-Neumonia#readme
+    about: Revisa el README y la CONSTITUTION.md antes de abrir un issue.

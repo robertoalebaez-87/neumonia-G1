@@ -1,0 +1,27 @@
+name: Spike / investigación
+description: Explorar una idea o tecnología antes de implementarla
+labels: ["spike"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Pregunta a responder
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Objetivo
+    validations:
+      required: true
+  - type: textarea
+    id: timebox
+    attributes:
+      label: Timebox
+      placeholder: "Ej.: 2 horas / 1 día"
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado

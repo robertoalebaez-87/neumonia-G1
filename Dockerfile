@@ -1,9 +1,11 @@
-FROM python:latest
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
-RUN apt-get update -y && \
-    apt-get install python3-opencv -y 
+WORKDIR /app
 
-WORKDIR /home/src
+COPY . .
 
-COPY . ./
-RUN pip install -r requirements.txt
+RUN uv sync --frozen --no-dev --extra ml
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["python", "detector_neumonia.py"]
